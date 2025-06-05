@@ -29,7 +29,9 @@ void makeReservation(vector<Reservation>& reservations, const string& currentUse
 bool isPeakSeason(const string& month);
 
 
-// --- Utilities ---
+
+// UTILITIES
+
 
 // Clears the console screen
 void clearScreen() {
@@ -121,3 +123,74 @@ void printLine(const string& content) {
 void printMenuOption(int option, const string& description) {
     cout << "  " << option << ". " << description << "\n";
 }
+
+
+// ROOM CLASSES
+
+
+// Base class for all room types
+class Room {
+public:
+    virtual double calculatePrice(int nights, bool isPeakSeason) const = 0;
+    virtual string getType() const = 0;
+    virtual string getDescription() const = 0;
+    virtual ~Room() {} // Important for proper cleanup
+};
+
+// Standard Room, basic price logic
+class StandardRoom : public Room {
+public:
+    double calculatePrice(int nights, bool isPeakSeason) const override {
+        double basePrice = nights * 1000.0;
+        return isPeakSeason ? basePrice * 1.2 : basePrice; // 20% surcharge
+    }
+    string getType() const override { return "Standard"; }
+    string getDescription() const override { return "A Standard Room with basic amenities."; }
+};
+
+// Deluxe Room, higher base price
+class DeluxeRoom : public Room {
+public:
+    double calculatePrice(int nights, bool isPeakSeason) const override {
+        double basePrice = nights * 2000.0;
+        return isPeakSeason ? basePrice * 1.2 : basePrice;
+    }
+    string getType() const override { return "Deluxe"; }
+    string getDescription() const override { return "A Deluxe Room with enhanced comfort."; }
+};
+
+// Suite Room, premium price
+class SuiteRoom : public Room {
+public:
+    double calculatePrice(int nights, bool isPeakSeason) const override {
+        double basePrice = nights * 3000.0;
+        return isPeakSeason ? basePrice * 1.2 : basePrice;
+    }
+    string getType() const override { return "Suite"; }
+    string getDescription() const override { return "A Suite Room with luxury amenities."; }
+};
+
+// Creates a Room object based on type string
+unique_ptr<Room> createRoom(const string& type) {
+    if (type == "Standard") return make_unique<StandardRoom>();
+    if (type == "Deluxe") return make_unique<DeluxeRoom>();
+    if (type == "Suite") return make_unique<SuiteRoom>();
+    throw invalid_argument("Invalid room type selected.");
+}
+
+
+
+//  USER CLASS
+
+
+// Represents a user (or admin)
+class User {
+public:
+    string username;
+    string password;
+    bool isAdmin; // True if admin
+    User(string uname, string pwd, bool adminFlag)
+        : username(move(uname)), password(move(pwd)), isAdmin(adminFlag) {}
+};
+
+

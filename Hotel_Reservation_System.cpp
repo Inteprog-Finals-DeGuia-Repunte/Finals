@@ -246,4 +246,45 @@ vector<User> loadUsers() {
     return users;
 }
 
+// Saves reservation data to reservations.csv
+void saveReservations(const vector<Reservation>& reservations) {
+    ofstream file(RESERVATIONS_FILE);
+    if (!file.is_open()) {
+        cerr << "Error: Could not open " << RESERVATIONS_FILE << " for writing.\n";
+        return;
+    }
+    for (const auto& res : reservations) {
+        file << res.username << "," << res.roomType << "," << res.nights << ","
+             << fixed << setprecision(2) << res.totalPrice << "," << res.month << "\n";
+    }
+    file.close();
+}
+
+// Loads reservation data from reservations.csv
+vector<Reservation> loadReservations() {
+    vector<Reservation> reservations;
+    ifstream file(RESERVATIONS_FILE);
+    if (!file.is_open()) return reservations;
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string uname, type, nightsStr, priceStr, month;
+        if (getline(ss, uname, ',') && getline(ss, type, ',') &&
+            getline(ss, nightsStr, ',') && getline(ss, priceStr, ',') && getline(ss, month, ',')) {
+            try {
+                if (!uname.empty() && !type.empty() && !nightsStr.empty() && !priceStr.empty() && !month.empty()) {
+                    int nights = stoi(nightsStr);
+                    double price = stod(priceStr);
+                    reservations.emplace_back(uname, type, nights, price, month);
+                }
+            } catch (const invalid_argument& e) {
+                cerr << "Error parsing reservation data: " << e.what() << " in line: \"" << line << "\"\n";
+            } catch (const out_of_range& e) {
+                cerr << "Error parsing reservation data: " << e.what() << " in line: \"" << line << "\"\n";
+            }
+        }
+    }
+    file.close();
+    return reservations;
+}
 

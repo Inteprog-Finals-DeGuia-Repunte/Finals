@@ -1,50 +1,55 @@
-Hotel Reservation System
-This is a console-based Hotel Reservation System built with C++. It allows users to register, log in, make, view, update, and cancel hotel reservations. Admins have additional functionalities to view all reservations, manage users, and generate system usage summaries.
+# Enhanced Hotel Reservation System  
 
-Features:
-  User Authentication: Secure user registration and login system.
-  Role-Based Access: Differentiates between regular users and administrators with distinct functionalities.
-  Room Types: Offers Standard, Deluxe, and Suite rooms with varying base prices.
-  Peak Season Surcharge: Automatically applies a 20% surcharge during peak months (March, April, May, December).
-  Reservation Management:
-    Make Reservation: Book new rooms for a specified number of nights and month.
-    View Reservations: See a detailed list of your current bookings.
-    Update Reservation: Modify the number of nights or month for an existing reservation.
-    Cancel Reservation: Remove a reservation from the system.
-  Admin Panel:
-    View All Reservations: Oversee all bookings made in the system.
-    View All Registered Users: See a list of all accounts.
-    Generate System Usage Summary: Get an overview of total users, reservations, and estimated revenue.
-  Data Persistence: User and reservation data are saved to users.csv and reservations.csv files, ensuring data is not lost when the program closes.
-  Input Validation: Robust handling of user input to prevent errors.
-  Cross-Platform Compatibility: Includes platform-specific headers for clear screen and masked input.
+A console-based **Hotel Reservation System** built with C++. This program offers a user-friendly experience for customers to manage their hotel reservations and provides administrators with powerful tools to oversee and maintain the system.  
 
-How to Run
-To compile and run this program, you'll need a C++ compiler.
+---
 
-Save the Code: Save the provided C++ code into a file named main.cpp.
+## Features  
 
-Compile: Open your terminal or command prompt, navigate to the directory where you saved main.cpp, and compile the code using the following command:
+### **General Features**  
+- **User Authentication**: Secure registration and login system.  
+- **Role-Based Access Control**:  
+  - **Users**: Book, view, update, and cancel reservations.  
+  - **Admins**: Manage user accounts, view all reservations, and generate usage summaries.  
+- **Room Options**: Choose between **Standard**, **Deluxe**, and **Suite** rooms with unique pricing.  
+- **Peak Season Surcharge**: Automatically applies a 20% surcharge during peak months (**March, April, May, December**).  
+- **Data Persistence**: User and reservation data are securely stored in `users.csv` and `reservations.csv`.  
 
-Bash
+### **User Functionality**  
+- **Make a Reservation**: Book rooms for specific months and nights.  
+- **View Reservations**: Review all active bookings with detailed information.  
+- **Update Reservation**: Modify the number of nights or the reservation month.  
+- **Cancel Reservation**: Remove a reservation from the system.  
 
-g++ main.cpp -o hotel_system -std=c++11
-g++: The GNU C++ compiler.
-main.cpp: Your source code file.
--o hotel_system: Specifies the output executable file name. You can choose any name you like (e.g., hotel_system.exe on Windows).
--std=c++11: Ensures compilation with C++11 standard features (like unique_ptr and emplace_back).
-Run: Execute the compiled program:
+### **Admin Panel**  
+- **View All Reservations**: Access a complete list of all bookings.  
+- **Manage Users**: View all registered accounts in the system.  
+- **Generate Usage Summaries**: Get detailed metrics such as the total number of users, reservations, and estimated revenue.  
 
-On Windows:
-Bash
+### **Technical Highlights**  
+- **Input Validation**: Ensures robust and error-free user interactions.  
+- **Cross-Platform Compatibility**: Includes platform-specific support for clearing the screen and masking input.  
+- **Default Admin Account**: Automatically created on the first run if no users are found (**username**: `admin`, **password**: `admin123`).  
 
-.\hotel_system.exe
-On Linux/macOS:
-Bash
+---
 
-./hotel_system
-The system will automatically create users.csv and reservations.csv files if they don't exist. A default admin account (username: admin, password: admin123) will be created upon the first run if no users are found.
+## How to Run  
 
-Team Members
-Ernest De Guia
-Mark Repunte
+### Prerequisites  
+- A C++ compiler (e.g., dev c++).  
+
+### Steps to Run  
+
+1. **Save the Code**:  
+   Save the C++ source code into a file named `main.cpp`.  
+
+2. **Compile and Run**:  
+   Press F6 to compile and run
+
+3. **Initial Setup**:
+   - The system will automatically create users.csv and reservations.csv if they don't exist.
+   - A default admin account is created on the first run if no users are present.
+
+## Team Members
+  -Ernest De Guia
+  -Mark Repunte

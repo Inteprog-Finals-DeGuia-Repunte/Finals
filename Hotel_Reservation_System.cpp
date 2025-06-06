@@ -288,3 +288,255 @@ vector<Reservation> loadReservations() {
     return reservations;
 }
 
+// LOGIC FOR RESERVATION
+
+// Checks if a month is peak season (March, April, May, Dec)
+bool isPeakSeason(const string& month) {
+    static const set<string> peakMonths = {"March", "April", "May", "December"};
+    string formattedMonth = month;
+    if (!formattedMonth.empty()) {
+        formattedMonth[0] = toupper(formattedMonth[0]);
+        for (size_t i = 1; i < formattedMonth.length(); ++i) {
+            formattedMonth[i] = tolower(formattedMonth[i]);
+        }
+    }
+    return peakMonths.count(formattedMonth);
+}
+
+// Guides user to make a new reservation
+void makeReservation(vector<Reservation>& reservations, const string& currentUser) {
+    printHeader("Make a New Reservation");
+    printLine("Heads up: Base rates apply, but expect a 20% surcharge during Peak Season (March, April, May, December).");
+    cout << "\nAvailable Room Types:\n";
+    cout << "1. Standard (PHP 1000/night)\n";
+    cout << "2. Deluxe (PHP 2000/night)\n";
+    cout << "3. Suite (PHP 3000/night)\n";
+    cout << "Enter room type (Standard, Deluxe, or Suite): ";
+    string roomType;
+    getline(cin, roomType);
+
+    if (!roomType.empty()) { // Format room type for consistency
+        roomType[0] = toupper(roomType[0]);
+        for (size_t i = 1; i < roomType.length(); ++i) {
+            roomType[i] = tolower(roomType[i]);
+        }
+    }
+
+    unique_ptr<Room> room;
+    try {
+        room = createRoom(roomType); // Create room based on input
+    } catch (const invalid_argument& e) {
+        printLine(string("Oops! ") + e.what());
+        pauseScreen();
+        return;
+    }
+
+    int nights = getIntInput("Enter number of nights: ");
+    if (nights <= 0) {
+        printLine("Nights must be positive. Reservation cancelled.");
+        pauseScreen();
+        return;
+    }
+
+    cout << "Enter reservation month (e.g., January): ";
+    string month;
+    getline(cin, month);
+
+    if (!isValidMonth(month)) {
+        printLine("Invalid month. Reservation cancelled.");
+        pauseScreen();
+        return;
+    }
+
+    bool isCurrentPeakSeason = isPeakSeason(month);
+    if (isCurrentPeakSeason) {
+        printLine("Just a reminder: " + month + " is Peak Season, so that 20% surcharge is on!");
+    }
+
+    double totalPrice = room->calculatePrice(nights, isCurrentPeakSeason);
+    reservations.emplace_back(currentUser, roomType, nights, totalPrice, month);
+    saveReservations(reservations);
+    printLine("Reservation successful! Total Price: PHP " + to_string(totalPrice));
+    pauseScreen();
+}
+
+// Shows all reservations for the current user in a table
+void viewReservations(const vector<Reservation>& reservations, const string& username) {
+    printHeader("Your Reservations");
+    bool found = false;
+    int reservationCount = 0;
+
+    cout << left << setw(5) << "#"
+         << setw(15) << "Room Type"
+         << setw(10) << "Nights"
+         << setw(12) << "Month"
+         << setw(20) << "Total Price (PHP)" << "\n";
+    cout << string(62, '-') << "\n"; // Table header divider
+
+    for (const auto& res : reservations) {
+        if (res.username == username) {
+            found = true;
+            reservationCount++;
+            cout << left << setw(5) << reservationCount
+                 << setw(15) << res.roomType
+                 << setw(10) << res.nights
+                 << setw(12) << res.month
+                 << setw(20) << fixed << setprecision(2) << res.totalPrice << "\n";
+        }
+    }
+    if (!found) {
+        printLine("No reservations found for your account.");
+    }
+    pauseScreen();
+}
+
+// Allows user to change an existing reservation
+void updateReservation(vector<Reservation>& reservations, const string& username) {
+    printHeader("Update Reservation");
+    vector<int> userReservationIndices;
+    cout << "Your current reservations:\n";
+    int displayIndex = 1;
+
+    cout << left << setw(5) << "#"
+         << setw(15) << "Room Type"
+         << setw(10) << "Nights"
+         << setw(12) << "Month"
+         << setw(20) << "Total Price (PHP)" << "\n";
+    cout << string(62, '-') << "\n"; // Table header divider
+
+    for (size_t i = 0; i < reservations.size(); ++i) {
+        if (reservations[i].username == username) {
+            userReservationIndices.push_back(i);
+            cout << left << setw(5) << displayIndex++
+                 << setw(15) << reservations[i].roomType
+                 << setw(10) << reservations[i].nights
+                 << setw(12) << reservations[i].month
+                 << setw(20) << fixed << setprecision(2) << reservations[i].totalPrice << "\n";
+        }
+    }
+
+    if (userReservationIndices.empty()) {
+        printLine("No reservations found to update.");
+        pauseScreen();
+        return;
+    }
+
+    int choice = getIntInput("\nEnter the number of the reservation you want to update: ");
+    if (choice < 1 || choice > userReservationIndices.size()) {
+        printLine("Invalid reservation number. Update cancelled.");
+        pauseScreen();
+        return;
+    }
+
+    int actualIndex = userReservationIndices[choice - 1];
+    Reservation& resToUpdate = reservations[actualIndex]; // Get the actual reservation
+
+    cout << "\n--- Selected Reservation Details ---\n"; // Divider
+    cout << "  Room Type: " << resToUpdate.roomType << "\n"
+         << "  Number of Nights: " << resToUpdate.nights << "\n"
+         << "  Month: " << resToUpdate.month << "\n"
+         << "  Total Price: PHP " << fixed << setprecision(2) << resToUpdate.totalPrice << "\n";
+    cout << "------------------------------------\n\n"; // Divider
+
+    cout << "Enter new number of nights (0 or Enter to keep current): ";
+    string newNightsStr;
+    getline(cin, newNightsStr);
+    int newNights = resToUpdate.nights; // Default to current
+
+    if (!newNightsStr.empty()) {
+        try {
+            int enteredNights = stoi(newNightsStr);
+            if (enteredNights == 0) {
+                printLine("Keeping current number of nights.");
+            } else if (enteredNights < 0) {
+                printLine("Nights can't be negative. Update cancelled.");
+                pauseScreen();
+                return;
+            } else {
+                newNights = enteredNights;
+            }
+        } catch (const invalid_argument&) {
+            printLine("Invalid input for nights. Please enter a number. Update cancelled.");
+            pauseScreen();
+            return;
+        } catch (const out_of_range&) {
+            printLine("Nights value out of range. Update cancelled.");
+            pauseScreen();
+            return;
+        }
+    } else {
+        printLine("Keeping current number of nights.");
+    }
+
+    cout << "Enter new reservation month (Enter to keep current): ";
+    string newMonth;
+    getline(cin, newMonth);
+
+    if (newMonth.empty()) {
+        newMonth = resToUpdate.month; // Keep current
+        printLine("Keeping current reservation month.");
+    } else {
+        if (!isValidMonth(newMonth)) {
+            printLine("Invalid month. Update cancelled.");
+            pauseScreen();
+            return;
+        }
+    }
+
+    // Recalculate price with new details
+    unique_ptr<Room> room = createRoom(resToUpdate.roomType);
+    resToUpdate.nights = newNights;
+    resToUpdate.month = newMonth;
+    resToUpdate.totalPrice = room->calculatePrice(newNights, isPeakSeason(newMonth));
+
+    printLine("Reservation updated successfully!");
+    saveReservations(reservations);
+    pauseScreen();
+}
+
+// Allows user to cancel a reservation
+void cancelReservation(vector<Reservation>& reservations, const string& username) {
+    printHeader("Cancel Reservation");
+    vector<int> userReservationIndices;
+    cout << "Your current reservations:\n";
+    int displayIndex = 1;
+
+    cout << left << setw(5) << "#"
+         << setw(15) << "Room Type"
+         << setw(10) << "Nights"
+         << setw(12) << "Month"
+         << setw(20) << "Total Price (PHP)" << "\n";
+    cout << string(62, '-') << "\n"; // Table header divider
+
+    for (size_t i = 0; i < reservations.size(); ++i) {
+        if (reservations[i].username == username) {
+            userReservationIndices.push_back(i);
+            cout << left << setw(5) << displayIndex++
+                 << setw(15) << reservations[i].roomType
+                 << setw(10) << reservations[i].nights
+                 << setw(12) << reservations[i].month
+                 << setw(20) << fixed << setprecision(2) << reservations[i].totalPrice << "\n";
+        }
+    }
+
+    if (userReservationIndices.empty()) {
+        printLine("No reservations found to cancel.");
+        pauseScreen();
+        return;
+    }
+
+    int choice = getIntInput("\nEnter the number of the reservation you want to cancel: ");
+
+    if (choice < 1 || choice > userReservationIndices.size()) {
+        printLine("Invalid reservation number. Cancellation aborted.");
+        pauseScreen();
+        return;
+    }
+
+    int actualIndexToRemove = userReservationIndices[choice - 1]; // Get actual index
+    reservations.erase(reservations.begin() + actualIndexToRemove); // Remove it!
+
+    saveReservations(reservations);
+    printLine("Reservation cancelled successfully.");
+    pauseScreen();
+}

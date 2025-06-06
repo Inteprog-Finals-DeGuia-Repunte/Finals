@@ -51,5 +51,4 @@ A console-based **Hotel Reservation System** built with C++. This program offers
    - A default admin account is created on the first run if no users are present.
 
 ## Team Members
-Ernest De Guia
-Mark Repunte
+  Ernest De Guia and Mark Repunte

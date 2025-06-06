@@ -540,3 +540,170 @@ void cancelReservation(vector<Reservation>& reservations, const string& username
     printLine("Reservation cancelled successfully.");
     pauseScreen();
 }
+
+// MAIN PROGRAM
+
+int main() {
+    vector<User> users = loadUsers();
+    vector<Reservation> reservations = loadReservations();
+
+    // Create default admin if no users exist (first run)
+    if (users.empty()) {
+        users.emplace_back("admin", "admin123", true);
+        saveUsers(users);
+        printLine("Default admin user created (username: admin, password: admin123).");
+        pauseScreen();
+    }
+
+    string currentUser;
+    bool isLoggedIn = false;
+    bool isAdmin = false;
+
+    while (true) {
+        if (!isLoggedIn) {
+            // Main menu for login/registration
+            printHeader("HOTEL SYSTEM - Main Menu");
+            printMenuOption(1, "Login");
+            printMenuOption(2, "Register");
+            printMenuOption(3, "Exit");
+            int choice = getIntInput("\nChoice: ");
+
+            if (choice == 1) { // Login
+                printHeader("Login");
+                cout << "Username: ";
+                getline(cin, currentUser);
+                string password = getMaskedInput("Password: ");
+
+                auto it = find_if(users.begin(), users.end(), [&](const User& user) {
+                    return user.username == currentUser && user.password == password;
+                });
+
+                if (it != users.end()) {
+                    isLoggedIn = true;
+                    isAdmin = it->isAdmin;
+                    printLine("Login successful!");
+                    pauseScreen();
+                } else {
+                    printLine("Invalid username or password.");
+                    pauseScreen();
+                }
+            } else if (choice == 2) { // Register
+                printHeader("Register New Account");
+                string username;
+                cout << "Choose username: ";
+                getline(cin, username);
+
+                // Check if username exists
+                if (any_of(users.begin(), users.end(), [&](const User& u){ return u.username == username; })) {
+                    printLine("Username '" + username + "' already taken. Pick another one!");
+                    pauseScreen();
+                    continue;
+                }
+
+                string password = getMaskedInput("Choose password: ");
+                users.emplace_back(username, password, false); // New users are regular users
+                saveUsers(users);
+                printLine("Registration successful. You can log in now.");
+                pauseScreen();
+            } else if (choice == 3) { // Exit
+                printLine("Exiting Hotel System. See ya!");
+                break;
+            } else {
+                printLine("Invalid choice. Try again, human.");
+                pauseScreen();
+            }
+        } else { // User is logged in
+            if (!isAdmin) { // Regular User Menu
+                printHeader("USER MENU - Logged in as: " + currentUser);
+                printMenuOption(1, "Make Reservation");
+                printMenuOption(2, "View Reservations");
+                printMenuOption(3, "Update Reservation");
+                printMenuOption(4, "Cancel Reservation");
+                printMenuOption(5, "Logout");
+                int userChoice = getIntInput("\nChoice: ");
+
+                if (userChoice == 1) {
+                    makeReservation(reservations, currentUser);
+                } else if (userChoice == 2) {
+                    viewReservations(reservations, currentUser);
+                } else if (userChoice == 3) {
+                    updateReservation(reservations, currentUser);
+                } else if (userChoice == 4) {
+                    cancelReservation(reservations, currentUser);
+                } else if (userChoice == 5) {
+                    isLoggedIn = false;
+                    printLine("Logged out.");
+                    pauseScreen();
+                } else {
+                    printLine("Invalid choice. Please try again.");
+                    pauseScreen();
+                }
+            } else { // Admin Menu
+                printHeader("ADMIN MENU - Logged in as: " + currentUser);
+                printMenuOption(1, "View All Reservations");
+                printMenuOption(2, "View All Registered Users");
+                printMenuOption(3, "Generate System Usage Summary");
+                printMenuOption(4, "Logout");
+                int adminChoice = getIntInput("\nChoice: ");
+
+                if (adminChoice == 1) { // View All Reservations
+                    printHeader("All Reservations in System");
+                    if (reservations.empty()) {
+                        printLine("No reservations found in the system.");
+                    } else {
+                        // Display all reservations in a neat table
+                        cout << left << setw(18) << "Username"
+                             << setw(15) << "Room Type"
+                             << setw(10) << "Nights"
+                             << setw(12) << "Month"
+                             << setw(15) << "Total Price (PHP)" << "\n";
+                        cout << string(70, '-') << "\n";
+                        for (const auto& res : reservations) {
+                            cout << left << setw(18) << res.username
+                                 << setw(15) << res.roomType
+                                 << setw(10) << res.nights
+                                 << setw(12) << res.month
+                                 << setw(15) << fixed << setprecision(2) << res.totalPrice << "\n";
+                        }
+                    }
+                    pauseScreen();
+                } else if (adminChoice == 2) { // View All Registered Users
+                    printHeader("All Registered Users");
+                    if (users.empty()) {
+                        printLine("No users registered in the system.");
+                    } else {
+                        // Display all users in a table
+                        cout << left << setw(25) << "Username"
+                             << setw(10) << "Admin" << "\n";
+                        cout << string(35, '-') << "\n";
+                        for (const auto& user : users) {
+                            cout << left << setw(25) << user.username
+                                 << setw(10) << (user.isAdmin ? "Yes" : "No") << "\n";
+                        }
+                    }
+                    pauseScreen();
+                } else if (adminChoice == 3) { // Generate System Usage Summary
+                    printHeader("System Usage Summary");
+                    cout << "Total Registered Users: " << users.size() << "\n";
+                    cout << "Total Reservations Made: " << reservations.size() << "\n";
+                    double totalRevenue = 0.0;
+                    for (const auto& res : reservations) {
+                        totalRevenue += res.totalPrice;
+                    }
+                    cout << "Total Estimated Revenue: PHP " << fixed << setprecision(2) << totalRevenue << "\n";
+                    pauseScreen();
+                } else if (adminChoice == 4) {
+                    isLoggedIn = false;
+                    isAdmin = false;
+                    printLine("Logged out.");
+                    pauseScreen();
+                } else {
+                    printLine("Invalid choice. Try again.");
+                    pauseScreen();
+                }
+            }
+        }
+    }
+
+    return 0;
+}

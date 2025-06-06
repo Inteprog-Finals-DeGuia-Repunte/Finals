@@ -193,4 +193,57 @@ public:
         : username(move(uname)), password(move(pwd)), isAdmin(adminFlag) {}
 };
 
+// RESERVATION CLASS
+
+// Represents a hotel reservation
+class Reservation {
+public:
+    string username;
+    string roomType;
+    int nights;
+    double totalPrice;
+    string month;
+    Reservation(string user, string type, int n, double price, string m)
+        : username(move(user)), roomType(move(type)), nights(n), totalPrice(price), month(move(m)) {}
+};
+
+
+// FILE HANDLING
+
+// CSV file names
+const char USERS_FILE[] = "users.csv";
+const char RESERVATIONS_FILE[] = "reservations.csv";
+
+// Saves user data to users.csv
+void saveUsers(const vector<User>& users) {
+    ofstream file(USERS_FILE);
+    if (!file.is_open()) {
+        cerr << "Error: Could not open " << USERS_FILE << " for writing.\n";
+        return;
+    }
+    for (const auto& user : users) {
+        file << user.username << "," << user.password << "," << user.isAdmin << "\n";
+    }
+    file.close();
+}
+
+// Loads user data from users.csv
+vector<User> loadUsers() {
+    vector<User> users;
+    ifstream file(USERS_FILE);
+    if (!file.is_open()) return users; // File not found, return empty
+    string line;
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string uname, pwd, adminFlagStr;
+        if (getline(ss, uname, ',') && getline(ss, pwd, ',') && getline(ss, adminFlagStr, ',')) {
+            if (!uname.empty()) { // Basic check
+                users.emplace_back(uname, pwd, (adminFlagStr == "1"));
+            }
+        }
+    }
+    file.close();
+    return users;
+}
+
 
